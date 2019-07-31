@@ -34,6 +34,8 @@ export class MapMainComponent implements AfterViewInit {
   trackingDots: any[] = [];
   private currentScenario: string;
 
+  private hideRechargeLegend: boolean;
+
   constructor(
     private planService: PlanService,
     private mapService: MapService,
@@ -67,6 +69,10 @@ export class MapMainComponent implements AfterViewInit {
         this.left = this.plan.css.legend[value].left;
         this.width = this.plan.css.legend[value].width;
       }
+    });
+    this.hideRechargeLegend = true;
+    this.planService.getVisObservable().subscribe((type: string) => {
+      this.hideRechargeLegend = type != "rc";
     });
 
     // Push Year Data to Second Screen
@@ -143,33 +149,43 @@ export class MapMainComponent implements AfterViewInit {
   @HostListener('window:keydown', ['$event'])
   keyEvent(event: KeyboardEvent) {
     if (event.key === 'ArrowRight') {
-      this.planService.incrementCurrentYear();
-    } else if (event.key === 'ArrowLeft') {
-      this.planService.decrementCurrentYear();
-    } else if (event.key === 'ArrowUp') {
-      this.mapService.incrementNextLayer();
-    } else if (event.key === 'ArrowDown') {
-      this.mapService.decrementNextLayer();
-    } else if (event.key === 'Enter') {
-      this.mapService.addRemoveLayer();
-    } else if (event.key === 'p') {
-      this.router.navigateByUrl('');
-      this.planService.setState('landing');
-      this.windowRefService.closeSecondScreen();
-    } else if (event.key === 'r') {
-      this.mapService.resetMap();
-    } else if (event.key === 'a') {
-      // this.chartService.incrementChart();
-    } else if (event.key === 's') {
-      // this.chartService.decrementChart();
-    } else if (event.key === 'q') {
-      this.planService.incrementScenario();
-    } else if (event.key === 'w') {
-      this.planService.decrementScenario();
-    } else if (event.key === 'l') {
-      this.planService.changeCurrentLegendLayout();
-    } else if (event.key === 'f') {
-      console.log('second => ' + this.windowRefService.secondScreenExists());
+      this.planService.changeScenario(1);
     }
+    else if (event.key === 'ArrowLeft') {
+      this.planService.changeScenario(-1);
+    }
+    else if (event.key === 'ArrowUp') {
+      this.planService.changeVis(1);
+    }
+    else if (event.key === 'ArrowDown') {
+      this.planService.changeVis(-1);
+    }
+
+    //mapservice
+    
+
+
+
+    // else if (event.key === 'Enter') {
+    //   this.mapService.addRemoveLayer();
+    // } else if (event.key === 'p') {
+    //   this.router.navigateByUrl('');
+    //   this.planService.setState('landing');
+    //   this.windowRefService.closeSecondScreen();
+    // } else if (event.key === 'r') {
+    //   this.mapService.resetMap();
+    // } else if (event.key === 'a') {
+    //   // this.chartService.incrementChart();
+    // } else if (event.key === 's') {
+    //   // this.chartService.decrementChart();
+    // } else if (event.key === 'q') {
+    //   this.planService.incrementScenario();
+    // } else if (event.key === 'w') {
+    //   this.planService.decrementScenario();
+    // } else if (event.key === 'l') {
+    //   this.planService.changeCurrentLegendLayout();
+    // } else if (event.key === 'f') {
+    //   console.log('second => ' + this.windowRefService.secondScreenExists());
+    // }
   }
 }

@@ -6,7 +6,7 @@ import { Plan } from '@app/interfaces/plan';
 import { Plans } from '../../assets/plans/plans';
 import { Scenario } from '@app/interfaces';
 import { SoundsService } from './sounds.service';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 
 import * as d3 from 'd3/d3.min';
 
@@ -14,6 +14,8 @@ import * as d3 from 'd3/d3.min';
   providedIn: 'root'
 })
 export class PlanService {
+
+  private static MAX_SCENARIOS = 7;
 
   private state: string;  // Current state of the machine
 
@@ -35,11 +37,31 @@ export class PlanService {
   private currentLegendLayout: number;
   public legendSubject = new Subject<string>();
 
+
+  private scenario: number;
+  private scenarioNumSubject: Subject<number>;
+
+  private visState: {
+    index: number,
+    values: string[]
+  }
+  private visSubject: Subject<string>;
+
   constructor(private soundsService: SoundsService) {
     this.plans = Plans;
     this.state = 'landing';
     this.legendLayouts = ['grid', 'vertical'];
     this.currentLegendLayout = 0;
+    this.scenarioNumSubject = new Subject<number>();
+    this.visSubject = new Subject<string>();
+  }
+
+  public getScenarioObservable(): Observable<number> {
+    return this.scenarioNumSubject.asObservable();
+  }
+
+  public getVisObservable(): Observable<string> {
+    return this.visSubject.asObservable();
   }
 
   public setupSelectedPlan(plan: Plan) {
@@ -52,17 +74,26 @@ export class PlanService {
     this.scenarioSubject.next(this.currentScenario);
     this.getCapacityData();
     this.getCapacityData();
+
+    //just hard code here for now, can set upo config stuff later
+    this.scenario = 0;
+    this.visState = {
+      index: 0,
+      values: ["lc", "rc"]
+    };
+    this.visSubject.next(this.visState.values[this.visState.index]);
+    this.scenarioSubject.next(this.currentScenario);
   }
 
   public getGenerationTotalForCurrentYear(technologies: string[]): number {
     let generationTotal = 0;
-    technologies.forEach(tech => {
-      this.generationData[this.currentScenario.name][tech].forEach(el => {
-        if (el.year === this.currentYear) {
-          generationTotal += el.value;
-        }
-      });
-    });
+    // technologies.forEach(tech => {
+    //   this.generationData[this.currentScenario.name][tech].forEach(el => {
+    //     if (el.year === this.currentYear) {
+    //       generationTotal += el.value;
+    //     }
+    //   });
+    // });
     return generationTotal;
   }
 
@@ -196,6 +227,37 @@ export class PlanService {
     this.scenarioSubject.next(this.currentScenario);
     this.soundsService.tick();
   }
+
+
+  public changeScenario(delta: number) {
+    this.scenario = this.positiveMod(this.scenario + delta, PlanService.MAX_SCENARIOS);
+    this.scenarioNumSubject.next(this.scenario);
+    this.soundsService.tick();
+  }
+
+  public changeVis(delta: number) {
+    this.visState.index = this.positiveMod(this.visState.index + delta, this.visState.values.length);
+    this.visSubject.next(this.visState.values[this.visState.index]);
+    this.soundsService.tick();
+  }
+
+  public setData() {
+
+  }
+
+  private positiveMod(n, m) {
+    let value;
+    if(n < 0) {
+      let p = -n;
+      value = p % m;
+      value = m - value;
+    }
+    else {
+      value = n % m;
+    }
+    return value;
+  }
+
 
   public setState(state): void {
     this.state = state;

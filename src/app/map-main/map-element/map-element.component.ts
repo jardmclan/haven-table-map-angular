@@ -13,6 +13,10 @@ import { MapLayer, Parcel } from '@app/interfaces';
 
 export class MapElementComponent implements OnInit {
 
+  static NUM_SCENARIOS = 6;
+  static VIS_TYPES = ["lc", "rc"];
+  static BASE_PATH = "assets/plans/oahu/images/"
+
   scale: number;
   width: number;
   height: number;
@@ -22,6 +26,16 @@ export class MapElementComponent implements OnInit {
   projection: d3.geo.Projection;
   path: d3.geo.Path;
   map: d3.Selection<any>;
+
+  imagePaths: {
+    lc: string[],
+    rc: string[]
+  };
+
+  scenarioState: {
+    type: string,
+    scenario: number
+  }
 
   @ViewChild('mapDiv', { static: true }) mapDiv: ElementRef;
 
@@ -33,6 +47,45 @@ export class MapElementComponent implements OnInit {
     this.height = mapService.getMapImageHeight() * this.scale;
     this.rasterBounds = mapService.getMapBounds();
     this.baseMapImagePath = mapService.getBaseMapPath();
+
+    this.imagePaths = {
+      lc: [],
+      rc: []
+    };
+
+    this.scenarioState = {
+      type: "lc",
+      scenario: 0
+    };
+
+    MapElementComponent.VIS_TYPES.forEach((type) => {
+      let imagePathsBase = this.imagePaths[type];
+      let pathBase = MapElementComponent.BASE_PATH + type + "_"
+      imagePathsBase.push(pathBase + "base.png");
+      for(let i = 1; i <= MapElementComponent.NUM_SCENARIOS; i++) {
+        imagePathsBase.push(pathBase + "s" + i.toString() + ".png");
+      }
+    });
+  }
+
+  private getImagePath(): string {
+    console.log("?");
+    console.log(this.scenarioState);
+    return this.imagePaths[this.scenarioState.type][this.scenarioState.scenario];
+  }
+
+  private setScenario(scenario: number): void {
+    this.scenarioState.scenario = scenario;
+  }
+
+  private setVis(type: string): void {
+    console.log(type);
+    this.scenarioState.type = type;
+  }
+
+  private updateMapImage() {
+    this.baseMapImagePath = this.getImagePath();
+    this.map.select("image").attr('xlink:href', `${this.baseMapImagePath}`);
   }
 
   ngOnInit() {
@@ -88,23 +141,33 @@ export class MapElementComponent implements OnInit {
       });
     });
 
-    // Subscribe to layer toggling
-    this.mapService.toggleLayerSubject.subscribe((layer) => {
-      if (layer.updateFunction !== null) {
-        layer.updateFunction(this.planService);
-      } else {
-        this.defaultFill(layer);
-      }
+    // // Subscribe to layer toggling
+    // this.mapService.toggleLayerSubject.subscribe((layer) => {
+    //   console.log("test");
+    //   if (layer.updateFunction !== null) {
+    //     layer.updateFunction(this.planService);
+    //   } else {
+    //     this.defaultFill(layer);
+    //   }
+    // });
+
+    // this.mapService.updateLayerSubject.subscribe((layer) => {
+    //   if (layer.updateFunction !== null) {
+    //     layer.updateFunction(this.planService);
+    //   } else {
+    //     this.defaultFill(layer);
+    //   }
+    // });
+
+    this.mapService.getScenarioObservable().subscribe((scenario: number) => {
+      this.setScenario(scenario);
+      this.updateMapImage();
     });
 
-    this.mapService.updateLayerSubject.subscribe((layer) => {
-      if (layer.updateFunction !== null) {
-        layer.updateFunction(this.planService);
-      } else {
-        this.defaultFill(layer);
-      }
+    this.mapService.getVisObservable().subscribe((type: string) => {
+      this.setVis(type);
+      this.updateMapImage();
     });
-
   }
 
   defaultFill(layer: MapLayer) {

@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { _ } from 'underscore';
-import { Subject } from 'rxjs';
+import { Subject, Observable } from 'rxjs';
 import { PlanService } from './plan.service';
 import { Map, MapLayer } from '@app/interfaces';
 import { SoundsService } from './sounds.service';
@@ -22,6 +22,23 @@ export class MapService {
   public toggleLayerSubject = new Subject<MapLayer>();      // Pubisher for when a layer is toggled
   public updateLayerSubject = new Subject<MapLayer>();
   public layerChangeSubject = new Subject<string>();
+
+  //ike wai subjects
+  private scenarioSubject = new Subject<number>();
+  private visSubject = new Subject<string>();
+  private dataSubject = new Subject<unknown>();
+
+  public getScenarioObservable(): Observable<number> {
+    return this.scenarioSubject.asObservable();
+  }
+
+  public getVisObservable(): Observable<string> {
+    return this.visSubject.asObservable();
+  }
+
+  public getDataObservable(): Observable<unknown> {
+    return this.dataSubject.asObservable();
+  }
 
   constructor(private planService: PlanService, private soundsService: SoundsService) {
 
@@ -52,6 +69,13 @@ export class MapService {
       this.layers.forEach(layer => {
         this.updateLayerSubject.next(layer);
       });
+    });
+
+    this.planService.getScenarioObservable().subscribe((scenario: number) => {
+      this.scenarioSubject.next(scenario);
+    });
+    this.planService.getVisObservable().subscribe((type: string) => {
+      this.visSubject.next(type);
     });
   }
 
@@ -115,6 +139,14 @@ export class MapService {
       console.log('No Map Selected');
       return '';
     }
+  }
+
+  public setVisType(type: string) {
+    this.visSubject.next(type);
+  }
+
+  public setScenario(scenario: number) {
+    this.scenarioSubject.next(scenario);
   }
 
   /** Adds layer if it is inactive, removes layer if it is active */

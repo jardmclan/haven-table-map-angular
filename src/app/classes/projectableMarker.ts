@@ -142,19 +142,20 @@ export class ProjectableMarker {
   */
   private doJob(id: number) {
     const direction = this.calcDirection();
+    //use year and scenario pucks
     switch (this.job) {
       case 'year':
         this.changeYear(direction);
         break;
-      case 'layer':
-        this.changeLayer(direction, id);
-        break;
+      // case 'layer':
+      //   this.changeLayer(direction, id);
+      //   break;
       case 'scenario':
         this.changeScenario(direction);
         break;
-      case 'chart':
-        this.changeChart(direction);
-        break;
+      // case 'chart':
+      //   this.changeChart(direction);
+      //   break;
       default:
         // Do nothing
         break;
@@ -168,10 +169,10 @@ export class ProjectableMarker {
   changeScenario(direction) {
     switch (direction) {
       case 'left':
-        this.planService.decrementScenario();
+        this.planService.changeScenario(-1);
         break;
       case 'right':
-        this.planService.incrementScenario();
+        this.planService.changeScenario(1);
         break;
       default:
         // do nothing
@@ -204,10 +205,10 @@ export class ProjectableMarker {
   changeYear(direction) {
     switch (direction) {
       case 'left':
-        this.planService.decrementCurrentYear();
+        this.planService.changeVis(-1);
         break;
       case 'right':
-        this.planService.incrementCurrentYear();
+        this.planService.changeVis(1);
         break;
       default:
         // do nothing
