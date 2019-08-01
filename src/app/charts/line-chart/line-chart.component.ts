@@ -17,110 +17,113 @@ export class LineChartComponent implements OnInit {
   myChart: any;
 
   capacityData: any;
-  scenario: Scenario;
+  scenario: number;
   year: number;
 
   data: any;
   labels: any;
   chartMax: number;
 
+  ikeData: BarData;
+
+ 
+
   constructor(private planService: PlanService) { }
 
   ngOnInit() {
 
-    this.scenario = this.planService.getCurrentScenario();
-    this.year = this.planService.getCurrentYear();
-    this.fetchData();
+    this.scenario = 0;
+    // this.year = this.planService.getCurrentYear();
+    // this.fetchData();
 
-    this.planService.scenarioSubject.subscribe(scenario => {
-      if (scenario) {
-        this.updateScenario(scenario);
-      }
+    this.planService.getScenarioObservable().subscribe((scenario: number) => {
+      this.updateScenario(scenario);
     });
 
-    this.planService.yearSubject.subscribe(year => {
-      if (year) {
-        this.updateYear(year);
-      }
-    });
+    // this.planService.yearSubject.subscribe(year => {
+    //   if (year) {
+    //     this.updateYear(year);
+    //   }
+    // });
 
+    this.ikeData = {
+      baseline: 659.28,
+      current: [659.28, 656.11, 649.19, 646.60, 654.15, 647.29, 644.70]
+    }
+    this.createChart();
   }
 
-  fetchData() {
-    this.planService.getCapacityData().then(capData => {
-      this.capacityData = capData;
-      this.data = {};
-      this.data.capacity = {};
-      const valueArray = [];
-      Object.keys(this.capacityData).forEach(scenario => {
-        this.data.capacity[scenario] = {};
-        this.data.capacity[scenario].labels = [];
-        this.data.capacity[scenario].datasets = [];
+  // fetchData() {
+  //   this.planService.getCapacityData().then(capData => {
+  //     this.capacityData = capData;
+  //     this.data = {};
+  //     this.data.capacity = {};
+  //     const valueArray = [];
+  //     Object.keys(this.capacityData).forEach(scenario => {
+  //       this.data.capacity[scenario] = {};
+  //       this.data.capacity[scenario].labels = [];
+  //       this.data.capacity[scenario].datasets = [];
 
-        Object.keys(this.capacityData[scenario]).forEach(tech => {
-          const dataset = {
-            label: tech,
-            backgroundColor: chartColors[tech],
-            borderColor: chartColors[tech],
-            pointRadius: 0,
-            fill: false,
-            data: [],
-          };
-          Object.keys(this.capacityData[scenario][tech]).forEach(el => {
-            const year = this.capacityData[scenario][tech][el].year;
-            const value = this.capacityData[scenario][tech][el].value;
-            this.data.capacity[scenario].labels.push(year);
-            dataset.data.push(value);
-            valueArray.push(value);
-          });
-          this.data.capacity[scenario].datasets.push(dataset);
-        });
-        this.data.capacity[scenario].labels = [...new Set(this.data.capacity[scenario].labels)];
-      });
-      this.chartMax = Math.ceil(Math.max(...valueArray) / 100) * 100;
-      this.createChart();
-    });
+  //       Object.keys(this.capacityData[scenario]).forEach(tech => {
+  //         const dataset = {
+  //           label: tech,
+  //           backgroundColor: chartColors[tech],
+  //           borderColor: chartColors[tech],
+  //           pointRadius: 0,
+  //           fill: false,
+  //           data: [],
+  //         };
+  //         Object.keys(this.capacityData[scenario][tech]).forEach(el => {
+  //           const year = this.capacityData[scenario][tech][el].year;
+  //           const value = this.capacityData[scenario][tech][el].value;
+  //           this.data.capacity[scenario].labels.push(year);
+  //           dataset.data.push(value);
+  //           valueArray.push(value);
+  //         });
+  //         this.data.capacity[scenario].datasets.push(dataset);
+  //       });
+  //       this.data.capacity[scenario].labels = [...new Set(this.data.capacity[scenario].labels)];
+  //     });
+  //     this.chartMax = Math.ceil(Math.max(...valueArray) / 100) * 100;
+  //     this.createChart();
+  //   });
 
-  }
+  // }
 
   createChart() {
-    const labels = this.data.capacity[this.scenario.name].labels;
-    const datasets = this.data.capacity[this.scenario.name].datasets;
-    this.createLineChart(labels, datasets);
+    const labels = ["Baseline", "This Scenario"];
+    const data = [this.ikeData.baseline, this.ikeData.current[this.scenario]];
+    this.createBarChart(labels, data);
   }
 
-  createLineChart(labels: any[], datasets: any[]) {
+  createBarChart(labels: any[], data: any[]) {
     this.ctx = this.chartDiv.nativeElement.getContext('2d');
     this.myChart = new Chart(this.ctx, {
-      type: 'line',
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Million Gallons Per Day",
+          backgroundColor: ["#fc8d62", "#66c2a5"],
+          data: data
+        }]
+      },
       options: {
-        responsive: false,
-        annotation: {
-          annotations: [
-            {
-              drawTime: 'afterDatasetsDraw',
-              type: 'line',
-              mode: 'vertical',
-              scaleID: 'x-axis-0',
-              value: this.year,
-              borderWidth: 3,
-              borderColor: 'white',
-              borderDash: [5, 5],
-              label: {
-                content: this.year,
-                enabled: true,
-                position: 'top'
-              }
-            }
-          ]
-        },
         legend: {
-          labels: {
-            fontColor: 'white',
-            fontStyle: 'bold',
-            fontSize: 14
-          }
+          display: false
         },
+        // title: {
+        //   display: true,
+        //   text: 'Groundwater Recharge (Million Gallons Per Day)'
+        // },
+        // scales: {
+        //   yAxes: [{
+        //     ticks: {
+        //       suggestedMin: 600,
+        //       suggestedMax: 700
+        //     }
+        //   }]
+        // }
         scales: {
           xAxes: [{
             display: true,
@@ -132,56 +135,60 @@ export class LineChartComponent implements OnInit {
               fontSize: 14,
               fontStyle: 'bold',
               fontColor: 'white',
-            },
-            scaleLabel: {
-              display: true,
-              fontSize: 18,
-              fontStyle: 'bold',
-              fontColor: '#FFFFFF',
-              labelString: 'Year'
             }
           }],
           yAxes: [{
             display: true,
             gridLines: {
-              display: true,
+              display: false,
               color: '#FFFFFF',
             },
             ticks: {
-              fontSize: 14,
+              fontSize: 12,
               fontStyle: 'bold',
               fontColor: 'white',
-              max: this.chartMax
+              min: 600,
+              max: 700
             },
             scaleLabel: {
               display: true,
-              fontSize: 18,
+              fontSize: 14,
               fontStyle: 'bold',
               fontColor: '#FFFFFF',
-              labelString: 'Capacity (MW)'
+              labelString: 'Recharge (Million Gallons Per Day)'
             }
           }]
         }
-      },
-      data: {
-        labels,
-        datasets
-      },
+      }
     });
+
+    // this.ctx.textAlign = 'center';
+    // this.ctx.fillStyle = "rgba(255, 255, 255, 1)";
+    // this.ctx.textBaseline = 'bottom';
+
+    // this.data.datasets.forEach(function (dataset, i) {
+    //     var meta = this.myChart.controller.getDatasetMeta(i);
+    //     meta.data.forEach(function (bar, index) {
+    //         var data = dataset.data[index];
+    //         this.ctx.fillText(data, bar._model.x, bar._model.y - 5);
+    //     });
+    // });
+    console.log(this.myChart);
   }
 
-  updateYear(year: number) {
-    this.year = year;
-    this.myChart.options.annotation.annotations[0].value = this.year;
-    this.myChart.options.annotation.annotations[0].label.content = this.year;
-    this.myChart.update();
-  }
 
-  updateScenario(scenario: Scenario) {
+
+  updateScenario(scenario: number) {
+    //console.log(this.myChart.data);
     this.scenario = scenario;
-    this.myChart.data.datasets = this.data.capacity[this.scenario.name].datasets;
+    this.myChart.data.datasets[0].data = [this.ikeData.baseline, this.ikeData.current[this.scenario]];
     this.myChart.update();
   }
 
+}
+
+interface BarData {
+  baseline: number,
+  current: number[]
 }
 

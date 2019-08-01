@@ -58,6 +58,7 @@ export class MapMainComponent implements AfterViewInit {
     this.left = this.plan.css.legend[this.legendClass].left;
     this.width = this.plan.css.legend[this.legendClass].width;
 
+    this.hideRechargeLegend = true;
   }
 
   ngAfterViewInit() {
@@ -70,7 +71,7 @@ export class MapMainComponent implements AfterViewInit {
         this.width = this.plan.css.legend[value].width;
       }
     });
-    this.hideRechargeLegend = true;
+    
     this.planService.getVisObservable().subscribe((type: string) => {
       this.hideRechargeLegend = type != "rc";
     });

@@ -69,8 +69,8 @@ export class MapElementComponent implements OnInit {
   }
 
   private getImagePath(): string {
-    console.log("?");
-    console.log(this.scenarioState);
+    // console.log("?");
+    // console.log(this.scenarioState);
     return this.imagePaths[this.scenarioState.type][this.scenarioState.scenario];
   }
 
@@ -79,7 +79,7 @@ export class MapElementComponent implements OnInit {
   }
 
   private setVis(type: string): void {
-    console.log(type);
+    //console.log(type);
     this.scenarioState.type = type;
   }
 
