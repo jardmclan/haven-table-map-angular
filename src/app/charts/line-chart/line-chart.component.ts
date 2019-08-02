@@ -161,7 +161,32 @@ export class LineChartComponent implements OnInit {
           }]
         },
         animation: {
+          duration: 0,
           onProgress: function (animation) {
+            //console.log(animation);
+            let chartInstance = this.chart;
+            ctx = chartInstance.ctx;
+            ctx.font = Chart.helpers.fontString(Chart.defaults.global.defaultFontSize, Chart.defaults.global.defaultFontStyle, Chart.defaults.global.defaultFontFamily);
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+
+            this.data.datasets.forEach(function (dataset, i) {
+              let meta = chartInstance.controller.getDatasetMeta(i);
+              meta.data.forEach(function (bar, index) {
+                let data = dataset.data[index];
+                ctx.fillStyle = "rgba(0, 0, 0, 1)";
+                //console.log(bar);
+                let width = bar._model.width;
+                let height = Chart.defaults.global.defaultFontSize + 5;
+                let x = bar._model.x;
+                let y = bar._model.y;
+                ctx.fillRect(x - width / 2, y - height, width, height);
+                ctx.fillStyle = "rgba(255, 255, 255, 1)";                         
+                ctx.fillText(data, bar._model.x, bar._model.y - 2);
+              });
+            });
+          },
+          onComplete: function (animation) {
             //console.log(animation);
             let chartInstance = this.chart;
             ctx = chartInstance.ctx;
