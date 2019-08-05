@@ -70,7 +70,7 @@ export const OahuPlan: Plan = {
     colors: chartColors
   },
   map: {
-    scale: 0.237,
+    scale: 0.375,
     width: 3613,
     height: 2794,
     bounds: [[-158.281, 21.710], [-157.647, 21.252]],
